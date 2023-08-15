@@ -1,0 +1,40 @@
+body {
+  background-color: #0f1419;
+  color: #f4f2ec;
+  margin:0;
+  padding:0;
+}
+#runButton {
+  appearance: none;
+  outline: none;
+  border:none;
+  background: #27ae60;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 20px;
+  width: 35px;
+  height:35px;
+  vertical-align: top;
+  padding:0;
+  margin:0;
+}
+#output {
+  /* width: 100%; */
+}
+#flexContainer {
+  display: flex; /* Enables Flexbox */
+  flex-direction: column; /* Stacks child elements vertically */
+  height: 100vh; /* Use 100% if within another container */
+}
+#flexContainer > * {
+  flex: 1;/* Allows boxes to take equal space and grow equally */
+  padding: 10px;
+  border: 1px solid white;
+}
+.cm-editor {
+  height: 100%;
+}
+#toolbar {
+  flex: 0 0 auto;
+}

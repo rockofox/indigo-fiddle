@@ -1,0 +1,24 @@
+{
+  "name": "js",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@bjorn3/browser_wasi_shim": "^0.2.14",
+    "@codemirror/legacy-modes": "^6.3.3",
+    "codemirror": "^6.0.1",
+    "thememirror": "^2.0.1",
+    "xterm": "^5.2.1",
+    "xterm-addon-fit": "^0.7.0"
+  },
+  "devDependencies": {
+    "ts-loader": "^9.4.4",
+    "typescript": "^5.1.6",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack",
+    "watch": "webpack --watch"
+  }
+}
