@@ -3,7 +3,7 @@ import { autocompletion } from "@codemirror/autocomplete"
 import { WASI, File, OpenFile, PreopenDirectory, Fd, strace, Directory } from "@bjorn3/browser_wasi_shim";
 import { Terminal } from "xterm";
 import { StreamLanguage } from "@codemirror/language";
-import {ruby} from "@codemirror/legacy-modes/mode/ruby";
+import { ruby } from "@codemirror/legacy-modes/mode/ruby";
 import { dracula, rosePineDawn } from "thememirror";
 import { FitAddon } from "xterm-addon-fit";
 
@@ -86,15 +86,15 @@ class XTermStdio extends Fd {
   //   return { ret: 0, nwritten };
   // }
   fd_write(view8/*: Uint8Array*/, iovs/*: [wasi.Iovec]*/)/*: {ret: number, nwritten: number}*/ {
-            let nwritten = 0;
-            for (let iovec of iovs) {
-                console.log(iovec.buf_len, iovec.buf_len, view8.slice(iovec.buf, iovec.buf + iovec.buf_len));
-                let buffer = view8.slice(iovec.buf, iovec.buf + iovec.buf_len);
-                this.term.write(buffer);
-                nwritten += iovec.buf_len;
-            }
-            return { ret: 0, nwritten };
-        }
+    let nwritten = 0;
+    for (let iovec of iovs) {
+      console.log(iovec.buf_len, iovec.buf_len, view8.slice(iovec.buf, iovec.buf + iovec.buf_len));
+      let buffer = view8.slice(iovec.buf, iovec.buf + iovec.buf_len);
+      this.term.write(buffer);
+      nwritten += iovec.buf_len;
+    }
+    return { ret: 0, nwritten };
+  }
 }
 const term = new Terminal({
   theme: {
@@ -138,23 +138,23 @@ document.getElementById("runButton").addEventListener("click", () => {
   });
 
 });
-async function runProgram(input) {
-  const wasi = new WASI([], [], [
-    new XTermStdio(term),
-            new XTermStdio(term),
-            new XTermStdio(term),
-            new PreopenDirectory("/usr/local/lib/indigo/std", {
-              "prelude.prism": new File(new TextEncoder("utf-8").encode(await fetch("indigo-lib/std/prelude.prism").then(r => r.text()))), // FIXME
-            })
-  ]);
-  const wasiImportObj = { wasi_snapshot_preview1: wasi.wasiImport };
-  const wasm = await WebAssembly.instantiateStreaming(fetch("indigo-init.wasm"), wasiImportObj);
-  wasi.inst = wasm.instance;
-  const exports = wasm.instance.exports;
-  const memory = exports.memory;
-  const encoder = new TextEncoder();
-  const decoder = new TextDecoder();
+const wasi = new WASI([], [], [
+  new XTermStdio(term),
+  new XTermStdio(term),
+  new XTermStdio(term),
+  new PreopenDirectory("/usr/local/lib/indigo/std", {
+    "prelude.prism": new File(new TextEncoder("utf-8").encode(await fetch("indigo-lib/std/prelude.prism").then(r => r.text()))), // FIXME
+  })
+]);
+const wasiImportObj = { wasi_snapshot_preview1: wasi.wasiImport };
+const wasm = await WebAssembly.instantiateStreaming(fetch("indigo-init.wasm"), wasiImportObj);
+wasi.inst = wasm.instance;
+const exports = wasm.instance.exports;
+const memory = exports.memory;
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
 
+async function runProgram(input) {
   const outputPtrPtr = exports.mallocPtr();
   //
   // const inputLen = Buffer.byteLength(input);
