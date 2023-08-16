@@ -7,6 +7,9 @@ import {ruby} from "@codemirror/legacy-modes/mode/ruby";
 import { dracula, rosePineDawn } from "thememirror";
 import { FitAddon } from "xterm-addon-fit";
 
+import "./style.css";
+import "xterm/css/xterm.css";
+
 // Our list of completions (can be static, since the editor
 /// will do filtering based on context).
 const completions = [
@@ -153,7 +156,6 @@ async function runProgram(input) {
   const decoder = new TextDecoder();
 
   const outputPtrPtr = exports.mallocPtr();
-  console.log("Initialized WASI reactor.");
   //
   // const inputLen = Buffer.byteLength(input);
   const inputLen = input.length;
