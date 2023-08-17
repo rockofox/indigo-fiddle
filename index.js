@@ -13,9 +13,9 @@ import "xterm/css/xterm.css";
 // Our list of completions (can be static, since the editor
 /// will do filtering based on context).
 const completions = [
-  { label: "panic", type: "keyword" },
-  { label: "park", type: "constant", info: "Test completion" },
-  { label: "password", type: "variable" },
+  // { label: "panic", type: "keyword" },
+  // { label: "park", type: "constant", info: "Test completion" },
+  // { label: "password", type: "variable" },
 ]
 
 function myCompletions(context) {
