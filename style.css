@@ -31,6 +31,7 @@ body {
   flex: 1;/* Allows boxes to take equal space and grow equally */
   padding: 10px;
   border: 1px solid white;
+  overflow:scroll;
 }
 .cm-editor {
   height: 100%;
