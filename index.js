@@ -4,7 +4,7 @@ import { WASI, File, OpenFile, PreopenDirectory, Fd, strace, Directory } from "@
 import { Terminal } from "xterm";
 import { StreamLanguage } from "@codemirror/language";
 import { ruby } from "@codemirror/legacy-modes/mode/ruby";
-import { dracula, rosePineDawn } from "thememirror";
+import { dracula } from "thememirror";
 import { FitAddon } from "xterm-addon-fit";
 
 import "./style.css";
@@ -31,13 +31,7 @@ function myCompletions(context) {
 }
 
 let view = new EditorView({
-  doc: `println :: String -> IO
-println s = do
-  print s
-  print "\\n"
-end
-
-bottles :: Int -> IO
+  doc: `bottles :: Int -> IO
 bottles i = do
   if i > 0 then do
     println ^i : " bottles of beer on the wall, " : ^i : " bottles of beer."
@@ -112,57 +106,35 @@ fitAddon.fit();
 window.addEventListener('resize', function(event) {
   fitAddon.fit();
 });
-// term.write("Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ");
 document.getElementById("runButton").addEventListener("click", () => {
-  // let args = ["bin", "arg1", "arg2"];
-  // let env = ["FOO=bar"];
-  // let fds = [
-  //   new XTermStdio(term),
-  //   new XTermStdio(term),
-  //   new XTermStdio(term),
-  //   new PreopenDirectory(".", {
-  //     "fiddle.in": new File(new TextEncoder("utf-8").encode(view.state.doc.toString())),
-  //   }),
-  // ];
-  // let wasi = new WASI(args, env, fds);
-  //
-  // WebAssembly.compileStreaming(fetch("indigo.wasm")).then((module) => {
-  //   WebAssembly.instantiate(module, {
-  //     "wasi_snapshot_preview1": wasi.wasiImport,
-  //   }).then((instance) => {
-  //     wasi.start(instance);
-  //   });
-  // });
   runProgram(view.state.doc.toString()).catch(e => {
     console.error(e);
   });
 
 });
-const wasi = new WASI([], [], [
-  new XTermStdio(term),
-  new XTermStdio(term),
-  new XTermStdio(term),
-  new PreopenDirectory("/usr/local/lib/indigo/std", {
-    "prelude.prism": new File(new TextEncoder("utf-8").encode(await fetch("indigo-lib/std/prelude.prism").then(r => r.text()))), // FIXME
-  })
-]);
-const wasiImportObj = { wasi_snapshot_preview1: wasi.wasiImport };
-const wasm = await WebAssembly.instantiateStreaming(fetch("indigo-init.wasm"), wasiImportObj);
-wasi.inst = wasm.instance;
-const exports = wasm.instance.exports;
-const memory = exports.memory;
+
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 async function runProgram(input) {
+  const wasi = new WASI([], [], [
+    new XTermStdio(term),
+    new XTermStdio(term),
+    new XTermStdio(term),
+    new PreopenDirectory("/usr/local/lib/indigo/std", {
+      "prelude.prism": new File(new TextEncoder("utf-8").encode(await fetch("indigo-lib/std/prelude.prism").then(r => r.text()))), // FIXME
+    })
+  ]);
+  const wasiImportObj = { wasi_snapshot_preview1: wasi.wasiImport };
+  const wasm = await WebAssembly.instantiateStreaming(fetch("indigo-init.wasm"), wasiImportObj);
+  wasi.inst = wasm.instance;
+  const exports = wasm.instance.exports;
+  const memory = exports.memory;
   const outputPtrPtr = exports.mallocPtr();
-  //
-  // const inputLen = Buffer.byteLength(input);
   const inputLen = input.length;
   const inputPtr = exports.mallocBytes(inputLen);
   const inputArr = new Uint8Array(memory.buffer, inputPtr, inputLen);
   encoder.encodeInto(input, inputArr);
-  // debugger;
   const outputLen = exports.runProgramRawBuffered(inputPtr, inputLen, outputPtrPtr);
   const outputPtrArr = new Uint32Array(memory.buffer, outputPtrPtr, 1);
   const outputPtr = outputPtrArr[0];
