@@ -1,4 +1,5 @@
 import { basicSetup, EditorView } from "codemirror"
+import { keymap } from "@codemirror/view"
 import { autocompletion } from "@codemirror/autocomplete"
 import { WASI, File, OpenFile, PreopenDirectory, Fd, strace, Directory } from "@bjorn3/browser_wasi_shim";
 import { Terminal } from "xterm";
@@ -6,6 +7,7 @@ import { StreamLanguage } from "@codemirror/language";
 import { ruby } from "@codemirror/legacy-modes/mode/ruby";
 import { dracula } from "thememirror";
 import { FitAddon } from "xterm-addon-fit";
+import { indentWithTab } from "@codemirror/commands"
 
 import "./style.css";
 import "xterm/css/xterm.css";
@@ -49,6 +51,7 @@ end`,
   extensions: [
     basicSetup,
     autocompletion({ override: [myCompletions] }),
+    keymap.of([indentWithTab]),
     StreamLanguage.define(ruby),
     dracula
   ],
