@@ -45,7 +45,7 @@ bottles i = do
   end
 end
 
-main => IO = do
+let main => IO = do
     bottles 99
 end`,
   extensions: [
@@ -125,7 +125,7 @@ async function runProgram(input) {
     new XTermStdio(term),
     new XTermStdio(term),
     new PreopenDirectory("/usr/local/lib/indigo/std", {
-      "prelude.prism": new File(new TextEncoder("utf-8").encode(await fetch("indigo-lib/std/prelude.prism").then(r => r.text()))), // FIXME
+      "prelude.in": new File(new TextEncoder("utf-8").encode(await fetch("indigo-lib/share/std/prelude.in").then(r => r.text()))), // FIXME
     })
   ]);
   const wasiImportObj = { wasi_snapshot_preview1: wasi.wasiImport };
