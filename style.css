@@ -56,4 +56,6 @@ body {
   background-color: #2d3040;
   overflow:hidden;
 }
-
+#output {
+  flex-grow: 0.5;
+}
