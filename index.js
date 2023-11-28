@@ -11,6 +11,10 @@ import { indentWithTab } from "@codemirror/commands"
 
 import "./style.css";
 import "xterm/css/xterm.css";
+// import * as brotli from "brotli";
+import brotliPromise from 'brotli-wasm'; // Import the default export
+
+const brotli = await brotliPromise; // Import is async in browsers due to wasm requirements!
 
 // Our list of completions (can be static, since the editor
 /// will do filtering based on context).
@@ -31,6 +35,8 @@ function myCompletions(context) {
     validFor: /^\w*$/
   }
 }
+
+
 
 let view = new EditorView({
   doc: `bottles :: Int -> IO
@@ -115,11 +121,49 @@ document.getElementById("runButton").addEventListener("click", () => {
   });
 
 });
+document.getElementById("copyUrlButton").addEventListener("click", () => {
+  let url = new URL(window.location.href);
+  let brotliB64 = base64ToUrlFriendly(bufferToBase64(brotli.compress(encoder.encode(view.state.doc.toString()))))
+  url.pathname = brotliB64;
+  navigator.clipboard.writeText(url.toString());
+});
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
+let url = new URL(window.location.href);
+let brotliB64 = url.pathname.slice(1);
+if (brotliB64) {
+  let brotliBuffer = base64ToBuffer(urlFriendlyToBase64(brotliB64));
+  let input = decoder.decode(brotli.decompress(brotliBuffer));
+  view.dispatch({
+    changes: {
+      from: 0,
+      to: view.state.doc.length,
+      insert: input
+    }
+  });
+}
+function bufferToBase64(bytes) {
+  return btoa(
+    bytes.reduce((acc, current) => acc + String.fromCharCode(current), "")
+  );
+}
+function base64ToBuffer(base64) {
+  return Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+}
+function base64ToUrlFriendly(base64) {
+  return base64.replaceAll('+', '~').replaceAll('/', '_').replaceAll('=', '-');
+}
+function urlFriendlyToBase64(urlFriendly) {
+  return urlFriendly.replaceAll('~', '+').replaceAll('_', '/').replaceAll('-', '=');
+}
 
 async function runProgram(input) {
+
+
+  let brotliB64 = base64ToUrlFriendly(bufferToBase64(brotli.compress(encoder.encode(input))))
+  window.history.replaceState({}, "", brotliB64);
+
   const wasi = new WASI([], [], [
     new XTermStdio(term),
     new XTermStdio(term),
@@ -148,3 +192,4 @@ async function runProgram(input) {
   term.write(output);
   exports.free_(outputPtr);
 }
+
