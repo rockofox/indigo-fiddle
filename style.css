@@ -3,8 +3,8 @@ body {
   color: #f4f2ec;
   margin:0;
   padding:0;
-  font-size:16px;
-
+  font-size:14px;
+  overflow:hidden;
 }
 /* #runButton { */
 /*   appearance: none; */
@@ -26,7 +26,7 @@ body {
   outline: none;
   border:none;
   background: none;
-  border: 1px solid gray;
+  /* border: 1px solid gray; */
   color: white;
   cursor: pointer;
   border-radius: 5px;
@@ -37,25 +37,47 @@ body {
   padding:0;
   margin:0;
 }
+/* #flexContainer { */
+/*   display: flex; */
+/*   flex-direction: column; */
+/*   height: 100vh; */
+/* } */
+/* #flexContainer > * { */
+/*   flex: 1; */
+/*   padding: 0px; */
+/*   border: 1px solid gray; */
+/*   overflow:scroll; */
+/* } */
 #flexContainer {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
+  height:100vh;
+  display: grid;
+  grid-template-rows: 1fr 30px 1fr;
 }
-#flexContainer > * {
-  flex: 1;
-  padding: 0px;
-  border: 1px solid gray;
-  overflow:scroll;
+#flexContainer > div {
+  /* border: 1px solid white; */
+}
+.gutter-row {
+  grid-column: 1/-1;
+  cursor: row-resize;
+}
+.gutter-row-1 {
+  grid-row: 2;
+}
+#editor {
+  min-height:0;
 }
 .cm-editor {
   height: 100%;
+  min-height:0;
 }
 #toolbar {
-  flex: 0 0 auto;
   background-color: #2d3040;
   overflow:hidden;
+  border: 1px solid gray;
 }
 #output {
-  flex-grow: 0.5;
+  min-height:0;
+}
+#output > *{
+  height:100%;
 }

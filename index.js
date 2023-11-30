@@ -8,7 +8,7 @@ import { ruby } from "@codemirror/legacy-modes/mode/ruby";
 import { dracula } from "thememirror";
 import { FitAddon } from "xterm-addon-fit";
 import { indentWithTab } from "@codemirror/commands"
-
+import Split from 'split-grid'
 import "./style.css";
 import "xterm/css/xterm.css";
 // import * as brotli from "brotli";
@@ -23,6 +23,14 @@ const completions = [
   // { label: "park", type: "constant", info: "Test completion" },
   // { label: "password", type: "variable" },
 ]
+
+Split({
+  minSize: 50,
+  rowGutters: [{
+    track: 1,
+    element: document.querySelector('.gutter-row-1'),
+  }]
+})
 
 function myCompletions(context) {
   let before = context.matchBefore(/\w+/)
@@ -39,16 +47,15 @@ function myCompletions(context) {
 
 
 let view = new EditorView({
-  doc: `bottles :: Int -> IO
-bottles i = do
-  if i > 0 then do
-    println ^i : " bottles of beer on the wall, " : ^i : " bottles of beer."
-    println "Take one down and pass it around, " : ((i) - 1) as String : " bottles of beer on the wall.\\n"
-    bottles (i)-1
-  else do
-    println "No more bottles of beer on the wall, no more bottles of beer."
-    println "Go to the store and buy some more, 99 bottles of beer on the wall."
-  end
+  doc: `let bottles (i: Int) => IO = do
+    if i > 0 then do
+        println ^i : " bottles of beer on the wall, " : ^i : " bottles of beer."
+        println "Take one down and pass it around, " : ((i) - 1) as String : " bottles of beer on the wall.\\n"
+        bottles (i)-1
+    else do
+        println "No more bottles of beer on the wall, no more bottles of beer."
+        println "Go to the store and buy some more, 99 bottles of beer on the wall."
+    end
 end
 
 let main => IO = do
@@ -115,17 +122,21 @@ fitAddon.fit();
 window.addEventListener('resize', function(event) {
   fitAddon.fit();
 });
-document.getElementById("runButton").addEventListener("click", () => {
+// document.getElementsByClassName("gutter-row")[0].addEventListener("mouseup", function(event) {
+//   fitAddon.fit();
+// });
+document.getElementById("runButton").addEventListener("mousedown", () => {
   runProgram(view.state.doc.toString()).catch(e => {
     console.error(e);
   });
 
 });
-document.getElementById("copyUrlButton").addEventListener("click", () => {
+document.getElementById("copyUrlButton").addEventListener("mousedown", () => {
   let url = new URL(window.location.href);
   let brotliB64 = base64ToUrlFriendly(bufferToBase64(brotli.compress(encoder.encode(view.state.doc.toString()))))
   url.pathname = brotliB64;
   navigator.clipboard.writeText(url.toString());
+  term.write("Copied URL to clipboard.\n");
 });
 
 const encoder = new TextEncoder();
@@ -159,8 +170,7 @@ function urlFriendlyToBase64(urlFriendly) {
 }
 
 async function runProgram(input) {
-
-
+  // input += "\nlet main => IO = do\n\nend"; // TODO
   let brotliB64 = base64ToUrlFriendly(bufferToBase64(brotli.compress(encoder.encode(input))))
   window.history.replaceState({}, "", brotliB64);
 

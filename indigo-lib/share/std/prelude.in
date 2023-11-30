@@ -60,12 +60,12 @@ println s = do
   print "\n"
 end
 
-range :: Any -> Any -> List{Int}
-range a b = do
-  if a == b then do
+range :: Any -> Any -> Any -> List{Any}
+range a b inc = do
+  if a >= b then do
     []
   else do
-    a : range (a + 1.0), b
+    a : (range (a + inc), b, inc)
   end
 end
 
