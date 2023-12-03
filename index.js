@@ -125,19 +125,22 @@ window.addEventListener('resize', function(event) {
 // document.getElementsByClassName("gutter-row")[0].addEventListener("mouseup", function(event) {
 //   fitAddon.fit();
 // });
-document.getElementById("runButton").addEventListener("mousedown", () => {
+function runCurrentProgram() {
   runProgram(view.state.doc.toString()).catch(e => {
     console.error(e);
   });
-
-});
-document.getElementById("copyUrlButton").addEventListener("mousedown", () => {
+}
+function copyUrl() {
   let url = new URL(window.location.href);
   let brotliB64 = base64ToUrlFriendly(bufferToBase64(brotli.compress(encoder.encode(view.state.doc.toString()))))
   url.pathname = brotliB64;
   navigator.clipboard.writeText(url.toString());
   term.write("Copied URL to clipboard.\n");
-});
+}
+document.getElementById("runButton").addEventListener("mousedown", runCurrentProgram);
+document.getElementById("runButton").addEventListener("touchstart", runCurrentProgram);
+document.getElementById("copyUrlButton").addEventListener("mousedown", copyUrl);
+document.getElementById("copyUrlButton").addEventListener("touchstart", copyUrl);
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
