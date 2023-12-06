@@ -18,7 +18,7 @@ import brotliPromise from 'brotli-wasm'; // Import the default export
 
 const brotli = await brotliPromise; // Import is async in browsers due to wasm requirements!
 
-class FiddleElement extends LitElement {
+export class FiddleElement extends LitElement {
   static styles = css`
   #toolbar button {
     appearance: none;
