@@ -22,13 +22,19 @@ module.exports = {
       {
         test: /\.in$/,
         type: "asset/inline"
-      }
+      },
+      // {
+      //   test: /\.tsx?$/,
+      //   use: 'ts-loader',
+      //   exclude: /node_modules/,
+      // }
     ],
   },
   resolve: {
     fallback: {
       'path': require.resolve('path-browserify'),
-    }
+    },
+    // extensions: ['.tsx', '.ts', '.js']
   }
   // experiments: {
   //   asyncWebAssembly: true,

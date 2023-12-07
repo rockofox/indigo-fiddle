@@ -1,17 +1,19 @@
 import { LitElement, html, css } from 'lit';
 import { basicSetup, EditorView } from "codemirror"
 import { keymap } from "@codemirror/view"
+import { Compartment } from "@codemirror/state"
 import { autocompletion } from "@codemirror/autocomplete"
 import { WASI, File, OpenFile, PreopenDirectory, Fd, strace, Directory } from "@bjorn3/browser_wasi_shim"
 import { Terminal } from "xterm";
-import { StreamLanguage } from "@codemirror/language";
-import { ruby } from "@codemirror/legacy-modes/mode/ruby";
+// import { StreamLanguage } from "@codemirror/language";
+// import { julia } from "@codemirror/legacy-modes/mode/julia";
 import { dracula } from "thememirror";
 import { FitAddon } from "xterm-addon-fit";
 import { indentWithTab } from "@codemirror/commands"
 import Split from 'split-grid'
 import "xterm/css/xterm.css";
 import * as fflate from 'fflate';
+import { indigo } from "codemirror-lang-indigo"
 
 import indigoInit from "./indigo-init.wasm";
 import indigoPrelude from "./indigo-lib/share/std/prelude.in";
@@ -108,13 +110,17 @@ let main => IO = do
 end`;
   }
   updated() {
+    const languageConf = new Compartment
     let view = new EditorView({
       doc: this.code,
+      lineWrapping: true,
       extensions: [
         basicSetup,
         // autocompletion({ override: [myCompletions] }),
         keymap.of([indentWithTab]),
-        StreamLanguage.define(ruby),
+        // StreamLanguage.define(julia),
+        languageConf.of(indigo()),
+        EditorView.lineWrapping,
         dracula
       ],
       // autoCloseParents: true,
