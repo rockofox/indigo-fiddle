@@ -1,9 +1,8 @@
 import { LitElement, html, css } from 'lit';
-// import { LitElement, html, css } from 'https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js';
 import { basicSetup, EditorView } from "codemirror"
 import { keymap } from "@codemirror/view"
 import { autocompletion } from "@codemirror/autocomplete"
-import { WASI, File, OpenFile, PreopenDirectory, Fd, strace, Directory } from "@bjorn3/browser_wasi_shim";
+import { WASI, File, OpenFile, PreopenDirectory, Fd, strace, Directory } from "@bjorn3/browser_wasi_shim"
 import { Terminal } from "xterm";
 import { StreamLanguage } from "@codemirror/language";
 import { ruby } from "@codemirror/legacy-modes/mode/ruby";
@@ -11,14 +10,15 @@ import { dracula } from "thememirror";
 import { FitAddon } from "xterm-addon-fit";
 import { indentWithTab } from "@codemirror/commands"
 import Split from 'split-grid'
-import "./style.css";
 import "xterm/css/xterm.css";
-// import * as brotli from "brotli";
-import brotliPromise from 'brotli-wasm'; // Import the default export
+import * as fflate from 'fflate';
 
-const brotli = await brotliPromise; // Import is async in browsers due to wasm requirements!
-
-export class FiddleElement extends LitElement {
+import indigoInit from "./indigo-init.wasm";
+import indigoPrelude from "./indigo-lib/share/std/prelude.in";
+class FiddleElement extends LitElement {
+  static properties = {
+    code: { type: String },
+  };
   static styles = css`
   #toolbar button {
     appearance: none;
@@ -36,22 +36,14 @@ export class FiddleElement extends LitElement {
     padding:0;
     margin:0;
   }
-  /* #flexContainer { */
-      /*   display: flex; */
-      /*   flex-direction: column; */
-      /*   height: 100vh; */
-      /* } */
-    /* #flexContainer > * { */
-      /*   flex: 1; */
-      /*   padding: 0px; */
-      /*   border: 1px solid gray; */
-      /*   overflow:scroll; */
-      /* } */
-    #flexContainer {
-      height:100vh;
+  #flexContainer {
+    /* height:100vh; */
+      height:100%;
+    width:100%;
       display: grid;
-      grid-template-rows: 1fr 30px 1fr;
-    }
+    overflow:hidden;
+    grid-template-rows: 1fr 30px 1fr;
+  }
   #flexContainer > div {
     /* border: 1px solid white; */
   }
@@ -83,21 +75,24 @@ export class FiddleElement extends LitElement {
 
   render() {
     return html`
+    <style>
+      ${FiddleElement.styles}
+      </style> <!-- FIXME: This is a hack -->
       <div id="flexContainer">
-      <div id="editor"></div>
-      <div class="gutter-row gutter-row-1" id="toolbar">
-      <button id="runButton">▶️</button>
-      <button id="copyUrlButton">🔗</button>
-      </div>
-      <div id="output"></div>
+        <div id="editor"></div>
+        <div class="gutter-row gutter-row-1" id="toolbar">
+        <button id="runButton">▶️</button>
+        <button id="copyUrlButton">🔗</button>
+        </div>
+        <div id="output"></div>
       </div>
       <!-- <script type="module" src="index.js"></script> -->
       `;
   }
 
-  firstUpdated() {
-    let view = new EditorView({
-      doc: `let bottles (i: Int) => IO = do
+  constructor() {
+    super();
+    this.code = `let bottles (i: Int) => IO = do
     if i > 0 then do
         println ^i : " bottles of beer on the wall, " : ^i : " bottles of beer."
         println "Take one down and pass it around, " : ((i) - 1) as String : " bottles of beer on the wall.\\n"
@@ -110,7 +105,11 @@ end
 
 let main => IO = do
     bottles 99
-end`,
+end`;
+  }
+  updated() {
+    let view = new EditorView({
+      doc: this.code,
       extensions: [
         basicSetup,
         // autocompletion({ override: [myCompletions] }),
@@ -119,18 +118,18 @@ end`,
         dracula
       ],
       // autoCloseParents: true,
-      parent: document.getElementById("editor"),
+      parent: this.renderRoot.querySelector("#editor"),
     })
     // let term = new Terminal();
     // let fitAddon = new FitAddon();
     // term.loadAddon(fitAddon);
-    // term.open(document.getElementById("output"));
+    // term.open(this.renderRoot.querySelector("#output"));
     // fitAddon.fit();
     Split({
       minSize: 50,
       rowGutters: [{
         track: 1,
-        element: document.querySelector('.gutter-row-1'),
+        element: this.renderRoot.querySelector('.gutter-row-1'),
       }]
     })
 
@@ -179,7 +178,7 @@ end`,
     });
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
-    term.open(document.getElementById("output"));
+    term.open(this.renderRoot.querySelector("#output"));
     fitAddon.fit();
     window.addEventListener('resize', function(event) {
       fitAddon.fit();
@@ -193,24 +192,24 @@ end`,
       });
     }
     function copyUrl() {
-      let url = new URL(window.location.href);
-      let brotliB64 = base64ToUrlFriendly(bufferToBase64(brotli.compress(encoder.encode(view.state.doc.toString()))))
-      url.pathname = brotliB64;
+      let url = new URL(window.standaloneFiddle === true ? window.location.href : "https://indigo-fiddle.fox.boo");
+      let compressedB64 = base64ToUrlFriendly(bufferToBase64(fflate.zlibSync(encoder.encode(view.state.doc.toString()))))
+      url.pathname = compressedB64;
       navigator.clipboard.writeText(url.toString());
       term.write("Copied URL to clipboard.\n");
     }
-    document.getElementById("runButton").addEventListener("mousedown", runCurrentProgram);
-    document.getElementById("runButton").addEventListener("touchstart", runCurrentProgram);
-    document.getElementById("copyUrlButton").addEventListener("mousedown", copyUrl);
-    document.getElementById("copyUrlButton").addEventListener("touchstart", copyUrl);
+    this.renderRoot.querySelector("#runButton").addEventListener("mousedown", runCurrentProgram);
+    this.renderRoot.querySelector("#runButton").addEventListener("touchstart", runCurrentProgram);
+    this.renderRoot.querySelector("#copyUrlButton").addEventListener("mousedown", copyUrl);
+    this.renderRoot.querySelector("#copyUrlButton").addEventListener("touchstart", copyUrl);
 
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
     let url = new URL(window.location.href);
-    let brotliB64 = url.pathname.slice(1);
-    if (brotliB64) {
-      let brotliBuffer = base64ToBuffer(urlFriendlyToBase64(brotliB64));
-      let input = decoder.decode(brotli.decompress(brotliBuffer));
+    let compressedB64 = url.pathname.slice(1);
+    if (compressedB64) {
+      let compressedBuffer = base64ToBuffer(urlFriendlyToBase64(compressedB64));
+      let input = decoder.decode(fflate.unzlibSync(compressedBuffer));
       view.dispatch({
         changes: {
           from: 0,
@@ -236,19 +235,21 @@ end`,
 
     async function runProgram(input) {
       // input += "\nlet main => IO = do\n\nend"; // TODO
-      let brotliB64 = base64ToUrlFriendly(bufferToBase64(brotli.compress(encoder.encode(input))))
-      window.history.replaceState({}, "", brotliB64);
+      let compressedB64 = base64ToUrlFriendly(bufferToBase64(fflate.zlibSync(encoder.encode(input))))
+      if (window.standaloneFiddle === true) {
+        window.history.replaceState({}, "", compressedB64);
+      }
 
       const wasi = new WASI([], [], [
         new XTermStdio(term),
         new XTermStdio(term),
         new XTermStdio(term),
         new PreopenDirectory("/usr/local/lib/indigo/std", {
-          "prelude.in": new File(new TextEncoder("utf-8").encode(await fetch("indigo-lib/share/std/prelude.in").then(r => r.text()))), // FIXME
+          "prelude.in": new File(new TextEncoder("utf-8").encode(await fetch(indigoPrelude).then(r => r.text()))), // FIXME
         })
       ]);
       const wasiImportObj = { wasi_snapshot_preview1: wasi.wasiImport };
-      const wasm = await WebAssembly.instantiateStreaming(fetch("indigo-init.wasm"), wasiImportObj);
+      const wasm = await WebAssembly.instantiateStreaming(fetch(indigoInit), wasiImportObj);
       wasi.inst = wasm.instance;
       const exports = wasm.instance.exports;
       const memory = exports.memory;
