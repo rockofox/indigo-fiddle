@@ -7,7 +7,7 @@ import { WASI, File, OpenFile, PreopenDirectory, Fd, strace, Directory } from "@
 import { Terminal } from "xterm";
 // import { StreamLanguage } from "@codemirror/language";
 // import { julia } from "@codemirror/legacy-modes/mode/julia";
-import { dracula } from "thememirror";
+import { oneDark } from "@codemirror/theme-one-dark";
 import { FitAddon } from "xterm-addon-fit";
 import { indentWithTab } from "@codemirror/commands"
 import Split from 'split-grid'
@@ -17,6 +17,8 @@ import { indigo } from "codemirror-lang-indigo"
 
 import indigoInit from "./indigo-init.wasm";
 import indigoPrelude from "./indigo-lib/share/std/prelude.in";
+import {HighlightStyle, syntaxHighlighting} from "@codemirror/language"
+import {tags as t} from "@lezer/highlight"
 class FiddleElement extends LitElement {
   static properties = {
     code: { type: String },
@@ -73,7 +75,10 @@ class FiddleElement extends LitElement {
   }
   #output > *{
     height:100%;
-  }`;
+  }
+
+
+  `;
 
   render() {
     return html`
@@ -110,6 +115,63 @@ let main => IO = do
 end`;
   }
   updated() {
+    let myTheme = EditorView.theme({
+  "&": {
+    color: "white",
+    backgroundColor: "#2d3040"
+  },
+  ".cm-content": {
+    caretColor: "#0e9"
+  },
+  "&.cm-focused .cm-cursor": {
+    borderLeftColor: "#0e9"
+  },
+  "&.cm-focused .cm-selectionBackground, ::selection": {
+    backgroundColor: "#074"
+  },
+  ".cm-gutters": {
+    backgroundColor: "#2d3040",
+    color: "#ddd",
+    border: "none"
+  }
+}, {dark: true})
+    const myHighlightStyle = HighlightStyle.define([
+  {tag: t.keyword,
+   color: "#c678dd"},
+  {tag: [t.name, t.deleted, t.character, t.propertyName, t.macroName],
+   color: "#e06c75"},
+  {tag: [t.function(t.variableName), t.labelName],
+   color: "#61afef"},
+  {tag: [t.color, t.constant(t.name), t.standard(t.name)],
+   color: "#d19a66"},
+  {tag: [t.definition(t.name), t.separator],
+   color: "#abb2bf"},
+  {tag: [t.typeName, t.className, t.number, t.changed, t.annotation, t.modifier, t.self, t.namespace],
+   color: "#56b6c2"},
+  {tag: [t.operator, t.operatorKeyword, t.url, t.escape, t.regexp, t.link, t.special(t.string)],
+   color: "#98c379"},
+  {tag: [t.meta, t.comment],
+   color: "#5c6370"},
+  {tag: t.strong,
+   fontWeight: "bold"},
+  {tag: t.emphasis,
+   fontStyle: "italic"},
+  {tag: t.strikethrough,
+   textDecoration: "line-through"},
+  {tag: t.link,
+   color: "#61afef",
+   textDecoration: "underline"},
+  {tag: t.heading,
+   fontWeight: "bold",
+   color: "#61afef"},
+  {tag: [t.atom, t.bool, t.special(t.variableName)],
+   color: "blue" },
+  {tag: [t.processingInstruction, t.string, t.inserted],
+   color: "#98c379"},
+  {tag: t.invalid,
+    color: "red"},
+])
+
     const languageConf = new Compartment
     let view = new EditorView({
       doc: this.code,
@@ -121,7 +183,8 @@ end`;
         // StreamLanguage.define(julia),
         languageConf.of(indigo()),
         EditorView.lineWrapping,
-        dracula
+        myTheme,
+        syntaxHighlighting(myHighlightStyle)
       ],
       // autoCloseParents: true,
       parent: this.renderRoot.querySelector("#editor"),
