@@ -17,8 +17,8 @@ import { indigo } from "codemirror-lang-indigo"
 
 import indigoInit from "./indigo-init.wasm";
 import indigoPrelude from "./indigo-lib/share/std/prelude.in";
-import {HighlightStyle, syntaxHighlighting} from "@codemirror/language"
-import {tags as t} from "@lezer/highlight"
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language"
+import { tags as t } from "@lezer/highlight"
 class FiddleElement extends LitElement {
   static properties = {
     code: { type: String },
@@ -77,7 +77,27 @@ class FiddleElement extends LitElement {
     height:100%;
   }
 
+[data-tooltip]:before {
+  content: attr(data-tooltip);
+  position: absolute;
+  /* top: -30px; */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,.8);
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  /* transition: .2s ease-in-out; */
+}
 
+[data-tooltip]:hover:before {
+  opacity: 1;
+}
   `;
 
   render() {
@@ -88,8 +108,9 @@ class FiddleElement extends LitElement {
       <div id="flexContainer">
         <div id="editor"></div>
         <div class="gutter-row gutter-row-1" id="toolbar">
-        <button id="runButton">▶️</button>
-        <button id="copyUrlButton">🔗</button>
+        <button id="runButton" data-tooltip="Run">▶️</button>
+        <button id="inputButton" data-tooltip="Run with input">📥</button>
+        <button id="copyUrlButton" data-tooltip="Copy URL to clipboard">🔗</button>
         </div>
         <div id="output"></div>
       </div>
@@ -116,61 +137,93 @@ end`;
   }
   updated() {
     let myTheme = EditorView.theme({
-  "&": {
-    color: "white",
-    backgroundColor: "#2d3040"
-  },
-  ".cm-content": {
-    caretColor: "#0e9"
-  },
-  "&.cm-focused .cm-cursor": {
-    borderLeftColor: "#0e9"
-  },
-  "&.cm-focused .cm-selectionBackground, ::selection": {
-    backgroundColor: "#074"
-  },
-  ".cm-gutters": {
-    backgroundColor: "#2d3040",
-    color: "#ddd",
-    border: "none"
-  }
-}, {dark: true})
+      "&": {
+        color: "white",
+        backgroundColor: "#2d3040"
+      },
+      ".cm-content": {
+        caretColor: "#0e9"
+      },
+      "&.cm-focused .cm-cursor": {
+        borderLeftColor: "#0e9"
+      },
+      "&.cm-focused .cm-selectionBackground, ::selection": {
+        backgroundColor: "#074"
+      },
+      ".cm-gutters": {
+        backgroundColor: "#2d3040",
+        color: "#ddd",
+        border: "none"
+      }
+    }, { dark: true })
     const myHighlightStyle = HighlightStyle.define([
-  {tag: t.keyword,
-   color: "#c678dd"},
-  {tag: [t.name, t.deleted, t.character, t.propertyName, t.macroName],
-   color: "#e06c75"},
-  {tag: [t.function(t.variableName), t.labelName],
-   color: "#61afef"},
-  {tag: [t.color, t.constant(t.name), t.standard(t.name)],
-   color: "#d19a66"},
-  {tag: [t.definition(t.name), t.separator],
-   color: "#abb2bf"},
-  {tag: [t.typeName, t.className, t.number, t.changed, t.annotation, t.modifier, t.self, t.namespace],
-   color: "#56b6c2"},
-  {tag: [t.operator, t.operatorKeyword, t.url, t.escape, t.regexp, t.link, t.special(t.string)],
-   color: "#98c379"},
-  {tag: [t.meta, t.comment],
-   color: "#5c6370"},
-  {tag: t.strong,
-   fontWeight: "bold"},
-  {tag: t.emphasis,
-   fontStyle: "italic"},
-  {tag: t.strikethrough,
-   textDecoration: "line-through"},
-  {tag: t.link,
-   color: "#61afef",
-   textDecoration: "underline"},
-  {tag: t.heading,
-   fontWeight: "bold",
-   color: "#61afef"},
-  {tag: [t.atom, t.bool, t.special(t.variableName)],
-   color: "blue" },
-  {tag: [t.processingInstruction, t.string, t.inserted],
-   color: "#98c379"},
-  {tag: t.invalid,
-    color: "red"},
-])
+      {
+        tag: t.keyword,
+        color: "#c678dd"
+      },
+      {
+        tag: [t.name, t.deleted, t.character, t.propertyName, t.macroName],
+        color: "#e06c75"
+      },
+      {
+        tag: [t.function(t.variableName), t.labelName],
+        color: "#61afef"
+      },
+      {
+        tag: [t.color, t.constant(t.name), t.standard(t.name)],
+        color: "#d19a66"
+      },
+      {
+        tag: [t.definition(t.name), t.separator],
+        color: "#abb2bf"
+      },
+      {
+        tag: [t.typeName, t.className, t.number, t.changed, t.annotation, t.modifier, t.self, t.namespace],
+        color: "#56b6c2"
+      },
+      {
+        tag: [t.operator, t.operatorKeyword, t.url, t.escape, t.regexp, t.link, t.special(t.string)],
+        color: "#98c379"
+      },
+      {
+        tag: [t.meta, t.comment],
+        color: "#5c6370"
+      },
+      {
+        tag: t.strong,
+        fontWeight: "bold"
+      },
+      {
+        tag: t.emphasis,
+        fontStyle: "italic"
+      },
+      {
+        tag: t.strikethrough,
+        textDecoration: "line-through"
+      },
+      {
+        tag: t.link,
+        color: "#61afef",
+        textDecoration: "underline"
+      },
+      {
+        tag: t.heading,
+        fontWeight: "bold",
+        color: "#61afef"
+      },
+      {
+        tag: [t.atom, t.bool, t.special(t.variableName)],
+        color: "blue"
+      },
+      {
+        tag: [t.processingInstruction, t.string, t.inserted],
+        color: "#98c379"
+      },
+      {
+        tag: t.invalid,
+        color: "red"
+      },
+    ])
 
     const languageConf = new Compartment
     let view = new EditorView({
@@ -246,6 +299,7 @@ end`;
       convertEol: true
     });
     const fitAddon = new FitAddon();
+    let stdin = "";
     term.loadAddon(fitAddon);
     term.open(this.renderRoot.querySelector("#output"));
     fitAddon.fit();
@@ -267,10 +321,30 @@ end`;
       navigator.clipboard.writeText(url.toString());
       term.write("Copied URL to clipboard.\n");
     }
+    function setStdin() {
+      stdin = "";
+      term.write("Enter stdin:\n");
+      const disponsable = term.onData((data) => {
+        if (data.charCodeAt(0) === 13) {
+          term.write("\n");
+          disponsable.dispose();
+          stdin += "\n\n";
+          console.log(stdin)
+          runProgram(view.state.doc.toString()).catch(e => {
+            console.error(e);
+          });
+        } else {
+          stdin += data;
+          term.write(data);
+        }
+      });
+    }
     this.renderRoot.querySelector("#runButton").addEventListener("mousedown", runCurrentProgram);
     this.renderRoot.querySelector("#runButton").addEventListener("touchstart", runCurrentProgram);
     this.renderRoot.querySelector("#copyUrlButton").addEventListener("mousedown", copyUrl);
     this.renderRoot.querySelector("#copyUrlButton").addEventListener("touchstart", copyUrl);
+    this.renderRoot.querySelector("#inputButton").addEventListener("mousedown", setStdin);
+    this.renderRoot.querySelector("#inputButton").addEventListener("touchstart", setStdin);
 
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
@@ -302,9 +376,9 @@ end`;
       return urlFriendly.replaceAll('~', '+').replaceAll('_', '/').replaceAll('-', '=');
     }
 
-    async function runProgram(input) {
+    async function runProgram(prog) {
       // input += "\nlet main => IO = do\n\nend"; // TODO
-      let compressedB64 = base64ToUrlFriendly(bufferToBase64(fflate.zlibSync(encoder.encode(input))))
+      let compressedB64 = base64ToUrlFriendly(bufferToBase64(fflate.zlibSync(encoder.encode(prog))))
       if (window.standaloneFiddle === true) {
         window.history.replaceState({}, "", compressedB64);
       }
@@ -323,11 +397,15 @@ end`;
       const exports = wasm.instance.exports;
       const memory = exports.memory;
       const outputPtrPtr = exports.mallocPtr();
-      const inputLen = input.length;
-      const inputPtr = exports.mallocBytes(inputLen);
-      const inputArr = new Uint8Array(memory.buffer, inputPtr, inputLen);
-      encoder.encodeInto(input, inputArr);
-      const outputLen = exports.runProgramRawBuffered(inputPtr, inputLen, outputPtrPtr);
+      const progLen = prog.length;
+      const progPtr = exports.mallocBytes(progLen);
+      const progArr = new Uint8Array(memory.buffer, progPtr, progLen);
+      encoder.encodeInto(prog, progArr);
+      const stdinLen = stdin.length;
+      const stdinPtr = exports.mallocBytes(stdinLen);
+      const stdinArr = new Uint8Array(memory.buffer, stdinPtr, stdinLen);
+      encoder.encodeInto(stdin, stdinArr);
+      const outputLen = exports.runProgramRawBuffered(progPtr, progLen, stdinPtr, stdinLen, outputPtrPtr);
       const outputPtrArr = new Uint32Array(memory.buffer, outputPtrPtr, 1);
       const outputPtr = outputPtrArr[0];
       const outputArr = new Uint8Array(memory.buffer, outputPtr, outputLen);
