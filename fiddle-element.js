@@ -323,12 +323,13 @@ end`;
     }
     function setStdin() {
       stdin = "";
+      term.clear();
       term.write("Enter stdin:\n");
       const disponsable = term.onData((data) => {
         if (data.charCodeAt(0) === 13) {
           term.write("\n");
           disponsable.dispose();
-          stdin += "\n\n";
+          stdin += "\n";
           console.log(stdin)
           runProgram(view.state.doc.toString()).catch(e => {
             console.error(e);
