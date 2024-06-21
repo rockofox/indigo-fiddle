@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, unsafeCSS } from 'lit';
 import { basicSetup, EditorView } from "codemirror"
 import { keymap } from "@codemirror/view"
 import { Compartment } from "@codemirror/state"
@@ -19,11 +19,13 @@ import indigoInit from "./indigo-init.wasm";
 import indigoPrelude from "./indigo-lib/share/std/prelude.in";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language"
 import { tags as t } from "@lezer/highlight"
+
+const BG_COLOR = "#191724";
 class FiddleElement extends LitElement {
   static properties = {
     code: { type: String },
   };
-  static styles = css`
+  static styles = unsafeCSS`
   #toolbar button {
     appearance: none;
     outline: none;
@@ -66,7 +68,7 @@ class FiddleElement extends LitElement {
       min-height:0;
     }
   #toolbar {
-    background-color: #2d3040;
+    background-color: #282a36;
     overflow:hidden;
     border: 1px solid gray;
   }
@@ -111,6 +113,7 @@ class FiddleElement extends LitElement {
         <button id="runButton" data-tooltip="Run">▶️</button>
         <button id="inputButton" data-tooltip="Run with input">📥</button>
         <button id="copyUrlButton" data-tooltip="Copy URL to clipboard">🔗</button>
+        <button id="clearOutputButton" data-tooltip="Clear output">🧹</button>
         </div>
         <div id="output"></div>
       </div>
@@ -138,8 +141,9 @@ end`;
   updated() {
     let myTheme = EditorView.theme({
       "&": {
+        fontSize: "1.5vw",
         color: "white",
-        backgroundColor: "#2d3040"
+        backgroundColor: BG_COLOR
       },
       ".cm-content": {
         caretColor: "#0e9"
@@ -151,7 +155,7 @@ end`;
         backgroundColor: "#074"
       },
       ".cm-gutters": {
-        backgroundColor: "#2d3040",
+        backgroundColor: BG_COLOR,
         color: "#ddd",
         border: "none"
       }
@@ -159,7 +163,7 @@ end`;
     const myHighlightStyle = HighlightStyle.define([
       {
         tag: t.keyword,
-        color: "#c678dd"
+        color: "#f6c177"
       },
       {
         tag: [t.name, t.deleted, t.character, t.propertyName, t.macroName],
@@ -187,7 +191,7 @@ end`;
       },
       {
         tag: [t.meta, t.comment],
-        color: "#5c6370"
+        color: "#6e6a86"
       },
       {
         tag: t.strong,
@@ -217,7 +221,7 @@ end`;
       },
       {
         tag: [t.processingInstruction, t.string, t.inserted],
-        color: "#98c379"
+        color: "#31748f"
       },
       {
         tag: t.invalid,
@@ -291,7 +295,7 @@ end`;
     }
     const term = new Terminal({
       theme: {
-        background: '#2d2f3f',
+        background: BG_COLOR,
         foreground: '#f8f8f2',
         cursor: '#f8f8f0',
         selectionBackground: '#44475a',
@@ -340,12 +344,18 @@ end`;
         }
       });
     }
+    function clearOutput() {
+      term.clear();
+    }
     this.renderRoot.querySelector("#runButton").addEventListener("mousedown", runCurrentProgram);
     this.renderRoot.querySelector("#runButton").addEventListener("touchstart", runCurrentProgram);
     this.renderRoot.querySelector("#copyUrlButton").addEventListener("mousedown", copyUrl);
     this.renderRoot.querySelector("#copyUrlButton").addEventListener("touchstart", copyUrl);
     this.renderRoot.querySelector("#inputButton").addEventListener("mousedown", setStdin);
     this.renderRoot.querySelector("#inputButton").addEventListener("touchstart", setStdin);
+    this.renderRoot.querySelector("#clearOutputButton").addEventListener("mousedown", clearOutput);
+    this.renderRoot.querySelector("#clearOutputButton").addEventListener("touchstart", clearOutput);
+
 
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
