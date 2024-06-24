@@ -253,6 +253,14 @@ class FiddleElement extends LitElement {
     this.editorView = this._createEditorView();
     const view = this.editorView
 
+    this.editorView.dispatch({
+      changes: {
+        from: 0,
+        to: this.editorView.state.doc.length,
+        insert: this._code
+      }
+    })
+
     Split({
       minSize: 50,
       rowGutters: [{
