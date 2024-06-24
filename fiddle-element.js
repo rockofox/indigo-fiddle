@@ -1,13 +1,9 @@
 import { LitElement, html, unsafeCSS } from 'lit';
 import { basicSetup, EditorView } from "codemirror"
 import { keymap } from "@codemirror/view"
-import { Compartment } from "@codemirror/state"
-import { autocompletion } from "@codemirror/autocomplete"
-import { WASI, File, OpenFile, PreopenDirectory, Fd, strace, Directory } from "@bjorn3/browser_wasi_shim"
+import { Compartment, EditorState } from "@codemirror/state"
+import { WASI, File, PreopenDirectory, Fd } from "@bjorn3/browser_wasi_shim"
 import { Terminal } from "xterm";
-// import { StreamLanguage } from "@codemirror/language";
-// import { julia } from "@codemirror/legacy-modes/mode/julia";
-import { oneDark } from "@codemirror/theme-one-dark";
 import { FitAddon } from "xterm-addon-fit";
 import { indentWithTab } from "@codemirror/commands"
 import Split from 'split-grid'
@@ -23,8 +19,26 @@ import { tags as t } from "@lezer/highlight"
 const BG_COLOR = "#191724";
 class FiddleElement extends LitElement {
   static properties = {
-    code: { type: String },
+    code: {
+      type: String
+    },
+    editorView: { attribute: false }
   };
+  /**
+   * @param {string} value
+   */
+  set code(value) {
+    this._code = value;
+    if (this.editorView) {
+      this.editorView.dispatch({
+        changes: {
+          from: 0,
+          to: this.editorView.state.doc.length,
+          insert: value
+        }
+      })
+    }
+  }
   static styles = unsafeCSS`
   #toolbar button {
     appearance: none;
@@ -117,28 +131,14 @@ class FiddleElement extends LitElement {
         </div>
         <div id="output"></div>
       </div>
-      <!-- <script type="module" src="index.js"></script> -->
       `;
   }
 
   constructor() {
     super();
-    this.code = `let bottles (i: Int) => IO = do
-    if i > 0 then do
-        println ^i : " bottles of beer on the wall, " : ^i : " bottles of beer."
-        println "Take one down and pass it around, " : ((i) - 1) as String : " bottles of beer on the wall.\\n"
-        bottles (i)-1
-    else do
-        println "No more bottles of beer on the wall, no more bottles of beer."
-        println "Go to the store and buy some more, 99 bottles of beer on the wall."
-    end
-end
-
-let main => IO = do
-    bottles 99
-end`;
   }
-  updated() {
+
+  _createEditorView() {
     let myTheme = EditorView.theme({
       "&": {
         fontSize: "1.5vw",
@@ -230,7 +230,8 @@ end`;
     ])
 
     const languageConf = new Compartment
-    let view = new EditorView({
+
+    return new EditorView({
       doc: this.code,
       lineWrapping: true,
       extensions: [
@@ -243,14 +244,15 @@ end`;
         myTheme,
         syntaxHighlighting(myHighlightStyle)
       ],
-      // autoCloseParents: true,
       parent: this.renderRoot.querySelector("#editor"),
-    })
-    // let term = new Terminal();
-    // let fitAddon = new FitAddon();
-    // term.loadAddon(fitAddon);
-    // term.open(this.renderRoot.querySelector("#output"));
-    // fitAddon.fit();
+    });
+  }
+
+
+  firstUpdated() {
+    this.editorView = this._createEditorView();
+    const view = this.editorView
+
     Split({
       minSize: 50,
       rowGutters: [{
@@ -264,24 +266,6 @@ end`;
         super();
         this.term = term;
       }
-      // fd_read(x, y) {
-      //   console.log("Reading!", x, y)
-      //   return { ret: 0 }
-      // }
-      // fd_fdstat_get() {
-      //   console.log("FDSTAT")
-      //   return { ret: -1, fdstat: new Fdstat() };
-      // }
-      // fd_write(view8, iovs) {
-      //   let nwritten = 0;
-      //   for (let iovec of iovs) {
-      //     // console.log(iovec.buf_len, iovec.buf_len, view8.slice(iovec.buf, iovec.buf + iovec.buf_len));
-      //     let buffer = view8.slice(iovec.buf, iovec.buf + iovec.buf_len);
-      //     this.term.write(buffer);
-      //     nwritten += iovec.buf_len;
-      //   }
-      //   return { ret: 0, nwritten };
-      // }
       fd_write(view8/*: Uint8Array*/, iovs/*: [wasi.Iovec]*/)/*: {ret: number, nwritten: number}*/ {
         let nwritten = 0;
         for (let iovec of iovs) {
@@ -310,9 +294,7 @@ end`;
     window.addEventListener('resize', function(event) {
       fitAddon.fit();
     });
-    // document.getElementsByClassName("gutter-row")[0].addEventListener("mouseup", function(event) {
-    //   fitAddon.fit();
-    // });
+
     function runCurrentProgram() {
       runProgram(view.state.doc.toString()).catch(e => {
         console.error(e);
@@ -388,7 +370,6 @@ end`;
     }
 
     async function runProgram(prog) {
-      // input += "\nlet main => IO = do\n\nend"; // TODO
       let compressedB64 = base64ToUrlFriendly(bufferToBase64(fflate.zlibSync(encoder.encode(prog))))
       if (window.standaloneFiddle === true) {
         window.history.replaceState({}, "", compressedB64);
