@@ -1,13 +1,13 @@
-import { LitElement, html, unsafeCSS } from 'lit';
+import { LitElement, html, css, unsafeCSS } from 'lit';
 import { basicSetup, EditorView } from "codemirror"
 import { keymap } from "@codemirror/view"
 import { Compartment, EditorState } from "@codemirror/state"
 import { WASI, File, PreopenDirectory, Fd } from "@bjorn3/browser_wasi_shim"
-import { Terminal } from "xterm";
-import { FitAddon } from "xterm-addon-fit";
+import { Terminal } from "@xterm/xterm";
+import { FitAddon } from "@xterm/addon-fit";
 import { indentWithTab } from "@codemirror/commands"
 import Split from 'split-grid'
-import "xterm/css/xterm.css";
+import "@xterm/xterm/css/xterm.css";
 import * as fflate from 'fflate';
 import { indigo } from "codemirror-lang-indigo"
 
@@ -39,7 +39,7 @@ class FiddleElement extends LitElement {
       })
     }
   }
-  static styles = unsafeCSS`
+  static styles = css`
   #toolbar button {
     appearance: none;
     outline: none;
@@ -77,10 +77,10 @@ class FiddleElement extends LitElement {
   #editor {
     min-height:0;
   }
-    .cm-editor {
-      height: 100%;
-      min-height:0;
-    }
+  .cm-editor {
+    height: 100%;
+    min-height:0;
+  }
   #toolbar {
     background-color: #282a36;
     overflow:hidden;
@@ -120,7 +120,7 @@ class FiddleElement extends LitElement {
     return html`
     <style>
       ${FiddleElement.styles}
-      </style> <!-- FIXME: This is a hack -->
+    </style>
       <div id="flexContainer">
         <div id="editor"></div>
         <div class="gutter-row gutter-row-1" id="toolbar">
@@ -141,7 +141,7 @@ class FiddleElement extends LitElement {
   _createEditorView() {
     let myTheme = EditorView.theme({
       "&": {
-        fontSize: "1.5vw",
+        fontSize: "14px",
         color: "white",
         backgroundColor: BG_COLOR
       },
