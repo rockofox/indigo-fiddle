@@ -25,7 +25,8 @@ class FiddleElement extends LitElement {
     editorView: { attribute: false },
     readOnly: { type: Boolean },
     noOutput: { type: Boolean },
-    noLineNumbers: { type: Boolean }
+    noLineNumbers: { type: Boolean },
+    standalone: { type: Boolean }
   };
   /**
    * @param {string} value
@@ -319,8 +320,8 @@ class FiddleElement extends LitElement {
         console.error(e);
       });
     }
-    function copyUrl() {
-      let url = new URL(window.standaloneFiddle === true ? window.location.href : "https://indigo-fiddle.fox.boo");
+    const copyUrl = () => {
+      let url = new URL(this.standalone ? window.location.href : "https://indigo-fiddle.fox.boo");
       let compressedB64 = base64ToUrlFriendly(bufferToBase64(fflate.zlibSync(encoder.encode(view.state.doc.toString()))))
       url.pathname = compressedB64;
       navigator.clipboard.writeText(url.toString());
@@ -360,18 +361,20 @@ class FiddleElement extends LitElement {
 
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
-    let url = new URL(window.location.href);
-    let compressedB64 = url.pathname.slice(1);
-    if (compressedB64) {
-      let compressedBuffer = base64ToBuffer(urlFriendlyToBase64(compressedB64));
-      let input = decoder.decode(fflate.unzlibSync(compressedBuffer));
-      view.dispatch({
-        changes: {
-          from: 0,
-          to: view.state.doc.length,
-          insert: input
-        }
-      });
+    if (this.standalone) {
+      let url = new URL(window.location.href);
+      let compressedB64 = url.pathname.slice(1);
+      if (compressedB64) {
+        let compressedBuffer = base64ToBuffer(urlFriendlyToBase64(compressedB64));
+        let input = decoder.decode(fflate.unzlibSync(compressedBuffer));
+        view.dispatch({
+          changes: {
+            from: 0,
+            to: view.state.doc.length,
+            insert: input
+          }
+        });
+      }
     }
     function bufferToBase64(bytes) {
       return btoa(
@@ -388,9 +391,9 @@ class FiddleElement extends LitElement {
       return urlFriendly.replaceAll('~', '+').replaceAll('_', '/').replaceAll('-', '=');
     }
 
-    async function runProgram(prog) {
+    const runProgram = async (prog) => {
       let compressedB64 = base64ToUrlFriendly(bufferToBase64(fflate.zlibSync(encoder.encode(prog))))
-      if (window.standaloneFiddle === true) {
+      if (this.standalone) {
         window.history.replaceState({}, "", compressedB64);
       }
 
