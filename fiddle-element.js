@@ -276,7 +276,8 @@ class FiddleElement extends LitElement {
       })
     } else {
       this.renderRoot.querySelector('.gutter-row-1').style.display = "none";
-      this.renderRoot.querySelector("#flexContainer").style.gridTemplateRows = "1fr 1fr";
+      this.renderRoot.querySelector("#flexContainer").style.gridTemplateRows = "1fr";
+      this.renderRoot.querySelector("#output").style.display = "none";
     }
 
     class XTermStdio extends Fd {
