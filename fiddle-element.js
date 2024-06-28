@@ -22,7 +22,10 @@ class FiddleElement extends LitElement {
     code: {
       type: String
     },
-    editorView: { attribute: false }
+    editorView: { attribute: false },
+    readOnly: { type: Boolean },
+    noOutput: { type: Boolean },
+    noLineNumbers: { type: Boolean }
   };
   /**
    * @param {string} value
@@ -157,7 +160,8 @@ class FiddleElement extends LitElement {
       ".cm-gutters": {
         backgroundColor: BG_COLOR,
         color: "#ddd",
-        border: "none"
+        border: "none",
+        display: this.noLineNumbers ? "none" : "block"
       }
     }, { dark: true })
     const myHighlightStyle = HighlightStyle.define([
@@ -242,7 +246,8 @@ class FiddleElement extends LitElement {
         languageConf.of(indigo()),
         EditorView.lineWrapping,
         myTheme,
-        syntaxHighlighting(myHighlightStyle)
+        syntaxHighlighting(myHighlightStyle),
+        EditorState.readOnly.of(this.readOnly)
       ],
       parent: this.renderRoot.querySelector("#editor"),
     });
@@ -261,13 +266,18 @@ class FiddleElement extends LitElement {
       }
     })
 
-    Split({
-      minSize: 50,
-      rowGutters: [{
-        track: 1,
-        element: this.renderRoot.querySelector('.gutter-row-1'),
-      }]
-    })
+    if (this.noOutput !== true) {
+      Split({
+        minSize: 50,
+        rowGutters: [{
+          track: 1,
+          element: this.renderRoot.querySelector('.gutter-row-1'),
+        }]
+      })
+    } else {
+      this.renderRoot.querySelector('.gutter-row-1').style.display = "none";
+      this.renderRoot.querySelector("#flexContainer").style.gridTemplateRows = "1fr 1fr";
+    }
 
     class XTermStdio extends Fd {
       constructor(term) {
