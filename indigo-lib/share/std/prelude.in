@@ -8,6 +8,15 @@ maybe :: Any -> Optional -> Any
 maybe x Some{value: y} = y
 maybe x None{} = x
 
+trait Monad = do
+  bind :: Self -> Fn{Any => Self} -> Self
+end
+
+impl Monad for Optional = do
+  bind Some{value: x} f = Some{value: f x}
+  bind None{} f = None{}
+end
+
 # `+` :: Any -> Any -> Any
 # `+` x y = x + y
 # `-` :: Any -> Any -> Any
