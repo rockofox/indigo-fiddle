@@ -13,6 +13,7 @@ import { indigo } from "codemirror-lang-indigo"
 
 import indigoInit from "./indigo-init.wasm";
 import indigoPrelude from "./indigo-lib/share/std/prelude.in";
+import indigoTest from "./indigo-lib/share/std/test.in";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language"
 import { tags as t } from "@lezer/highlight"
 
@@ -403,6 +404,7 @@ class FiddleElement extends LitElement {
         new XTermStdio(term),
         new PreopenDirectory("/usr/local/lib/indigo/std", {
           "prelude.in": new File(new TextEncoder("utf-8").encode(await fetch(indigoPrelude).then(r => r.text()))), // FIXME
+          "test.in": new File(new TextEncoder("utf-8").encode(await fetch(indigoTest).then(r => r.text())))
         })
       ]);
       const wasiImportObj = { wasi_snapshot_preview1: wasi.wasiImport };
