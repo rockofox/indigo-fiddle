@@ -11,9 +11,6 @@ import "@xterm/xterm/css/xterm.css";
 import * as fflate from 'fflate';
 import { indigo } from "codemirror-lang-indigo"
 
-import indigoInit from "./indigo-init.wasm";
-import indigoPrelude from "./indigo-lib/share/std/prelude.in";
-import indigoTest from "./indigo-lib/share/std/test.in";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language"
 import { tags as t } from "@lezer/highlight"
 
@@ -256,9 +253,9 @@ class FiddleElement extends LitElement {
   }
 
 
-  firstUpdated() {
+  async firstUpdated() {
     this.editorView = this._createEditorView();
-    const view = this.editorView
+    const view = this.editorView;
 
     this.editorView.dispatch({
       changes: {
@@ -266,7 +263,7 @@ class FiddleElement extends LitElement {
         to: this.editorView.state.doc.length,
         insert: this._code
       }
-    })
+    });
 
     if (this.noOutput !== true) {
       Split({
@@ -275,7 +272,7 @@ class FiddleElement extends LitElement {
           track: 1,
           element: this.renderRoot.querySelector('.gutter-row-1'),
         }]
-      })
+      });
     } else {
       this.renderRoot.querySelector('.gutter-row-1').style.display = "none";
       this.renderRoot.querySelector("#flexContainer").style.gridTemplateRows = "1fr";
@@ -287,10 +284,9 @@ class FiddleElement extends LitElement {
         super();
         this.term = term;
       }
-      fd_write(view8/*: Uint8Array*/, iovs/*: [wasi.Iovec]*/)/*: {ret: number, nwritten: number}*/ {
+      fd_write(view8, iovs) {
         let nwritten = 0;
         for (let iovec of iovs) {
-          console.log(iovec.buf_len, iovec.buf_len, view8.slice(iovec.buf, iovec.buf + iovec.buf_len));
           let buffer = view8.slice(iovec.buf, iovec.buf + iovec.buf_len);
           this.term.write(buffer);
           nwritten += iovec.buf_len;
@@ -337,7 +333,6 @@ class FiddleElement extends LitElement {
           term.write("\n");
           disponsable.dispose();
           stdin += "\n";
-          console.log(stdin)
           runProgram(view.state.doc.toString()).catch(e => {
             console.error(e);
           });
@@ -359,9 +354,23 @@ class FiddleElement extends LitElement {
     this.renderRoot.querySelector("#clearOutputButton").addEventListener("mousedown", clearOutput);
     this.renderRoot.querySelector("#clearOutputButton").addEventListener("touchstart", clearOutput);
 
-
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
+
+    const ZIP_URL = "https://storage.googleapis.com/indigolang/indigo-wasm-latest.zip";
+    let wasmBytes, preludeText, testText;
+    let zipFetched = false;
+    async function fetchAndUnzip() {
+      if (zipFetched) return;
+      const resp = await fetch(ZIP_URL);
+      const buf = new Uint8Array(await resp.arrayBuffer());
+      const files = fflate.unzipSync(buf);
+      wasmBytes = files["indigo-wasm-latest/indigo-init.wasm"];
+      preludeText = new TextDecoder("utf-8").decode(files["indigo-wasm-latest/std/prelude.in"]);
+      testText = new TextDecoder("utf-8").decode(files["indigo-wasm-latest/std/test.in"]);
+      zipFetched = true;
+    }
+
     if (this.standalone) {
       let url = new URL(window.location.href);
       let compressedB64 = url.pathname.slice(1);
@@ -393,7 +402,8 @@ class FiddleElement extends LitElement {
     }
 
     const runProgram = async (prog) => {
-      let compressedB64 = base64ToUrlFriendly(bufferToBase64(fflate.zlibSync(encoder.encode(prog))))
+      await fetchAndUnzip();
+      let compressedB64 = base64ToUrlFriendly(bufferToBase64(fflate.zlibSync(encoder.encode(prog))));
       if (this.standalone) {
         window.history.replaceState({}, "", compressedB64);
       }
@@ -403,12 +413,13 @@ class FiddleElement extends LitElement {
         new XTermStdio(term),
         new XTermStdio(term),
         new PreopenDirectory("/usr/local/lib/indigo/std", {
-          "prelude.in": new File(new TextEncoder("utf-8").encode(await fetch(indigoPrelude).then(r => r.text()))), // FIXME
-          "test.in": new File(new TextEncoder("utf-8").encode(await fetch(indigoTest).then(r => r.text())))
+          "prelude.in": new File(new TextEncoder("utf-8").encode(preludeText)),
+          "test.in": new File(new TextEncoder("utf-8").encode(testText))
         })
       ]);
       const wasiImportObj = { wasi_snapshot_preview1: wasi.wasiImport };
-      const wasm = await WebAssembly.instantiateStreaming(fetch(indigoInit), wasiImportObj);
+      // Use WebAssembly.instantiate instead of instantiateStreaming since we have bytes
+      const wasm = await WebAssembly.instantiate(wasmBytes, wasiImportObj);
       wasi.inst = wasm.instance;
       const exports = wasm.instance.exports;
       const memory = exports.memory;
@@ -430,8 +441,7 @@ class FiddleElement extends LitElement {
       fitAddon.fit();
       term.write(output);
       exports.free_(outputPtr);
-    }
-
+    };
   }
   createRenderRoot() {
     return this;
