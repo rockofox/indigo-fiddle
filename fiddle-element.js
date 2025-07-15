@@ -1,4 +1,4 @@
-z import { LitElement, html, css, unsafeCSS } from 'lit';
+import { LitElement, html, css, unsafeCSS } from 'lit';
 import { basicSetup, EditorView } from "codemirror"
 import { keymap } from "@codemirror/view"
 import { Compartment, EditorState } from "@codemirror/state"
