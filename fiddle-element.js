@@ -1,4 +1,4 @@
-import { LitElement, html, css, unsafeCSS } from 'lit';
+z import { LitElement, html, css, unsafeCSS } from 'lit';
 import { basicSetup, EditorView } from "codemirror"
 import { keymap } from "@codemirror/view"
 import { Compartment, EditorState } from "@codemirror/state"
@@ -437,6 +437,7 @@ class FiddleElement extends LitElement {
       const outputPtr = outputPtrArr[0];
       const outputArr = new Uint8Array(memory.buffer, outputPtr, outputLen);
       const output = decoder.decode(outputArr);
+      term.clear();
       term.reset();
       fitAddon.fit();
       term.write(output);
