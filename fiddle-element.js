@@ -432,13 +432,12 @@ class FiddleElement extends LitElement {
       const stdinPtr = exports.mallocBytes(stdinLen);
       const stdinArr = new Uint8Array(memory.buffer, stdinPtr, stdinLen);
       encoder.encodeInto(stdin, stdinArr);
+      term.reset();
       const outputLen = exports.runProgramRawBuffered(progPtr, progLen, stdinPtr, stdinLen, outputPtrPtr);
       const outputPtrArr = new Uint32Array(memory.buffer, outputPtrPtr, 1);
       const outputPtr = outputPtrArr[0];
       const outputArr = new Uint8Array(memory.buffer, outputPtr, outputLen);
       const output = decoder.decode(outputArr);
-      term.clear();
-      term.reset();
       fitAddon.fit();
       term.write(output);
       exports.free_(outputPtr);
